@@ -6,8 +6,20 @@ const urlencodedParser = express.urlencoded({
     limit: "10mb",
     extended: false,
   });
-router.get('/',(req,res)=>{
-    res.render('authors/index');
+router.get('/',async(req,res)=>{
+let searchOptions ={}
+if(req.query.name!=null&&req.query.name!=='')
+{
+    searchOptions.name = new RegExp ( req.query.name,'i')
+}
+
+  try{ const authors=await Author.find(searchOptions)
+    res.render('authors/index', {authors:authors,searchOptions: req.query})
+
+  }
+  catch{
+      res.redirect('/')
+  }
 })
 //new authors router
 router.get('/new',(req,res)=>{
@@ -15,13 +27,26 @@ router.get('/new',(req,res)=>{
 })
 //create author route
 
-router.post("/", urlencodedParser,(req, res) => {
+router.post("/", urlencodedParser,async(req, res) => {
     
     const author = new Author({
         name: req.body.name
       })
 
-author.save((err,newAuthor)=>{
+try{
+ const newAuthor= await author.save()
+  // res.redirect(`authors/${newAuthor,id}`)
+  res.redirect(`authors`)
+}catch{ res.render('authors/new', {
+    author: author,
+    errorMessage: 'Error creating Author'     })
+}
+
+
+
+
+
+/*author.save((err,newAuthor)=>{
     if(err) 
     {
         res.render('authors/new', {
@@ -32,7 +57,7 @@ author.save((err,newAuthor)=>{
        // res.redirect(`authors/${newAuthor,id}`)
        res.redirect(`authors`)
     }
-})
+})*/
 
   
   });
